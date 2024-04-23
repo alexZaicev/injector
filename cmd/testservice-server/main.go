@@ -2,37 +2,43 @@ package main
 
 import (
 	"context"
-	"injector/internal/adapters/proxy"
+	"google.golang.org/grpc"
 	"injector/internal/drivers/codes"
 	"injector/internal/drivers/logging"
 	"log/slog"
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
 )
 
 func run() int {
-	server, err := proxy.NewInjectorProxyServer(8080)
+	listener, err := net.Listen("tcp", ":8090")
 	if err != nil {
-		slog.Error("failed to create proxy server", logging.WithError(err))
 		return codes.Failure
 	}
+
+	server := grpc.NewServer()
+
+	api := NewTestServiceAPI()
+	api.RegisterService(server)
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 
-	if err = server.Serve(); err != nil {
-		slog.Error("failed to start proxy server", logging.WithError(err))
-		return codes.Failure
-	}
+	go func() {
+		if err = server.Serve(listener); err != nil {
+			slog.Error("failed to start grpc test server", logging.WithError(err))
+		}
+	}()
 
-	slog.Info("proxy server started")
+	slog.Info("grpc test server started")
 
 	<-ctx.Done()
 	stop()
 
-	slog.Info("stopping proxy server")
+	slog.Info("stopping grpc test server")
 	server.Stop()
-	slog.Info("proxy server stopped")
+	slog.Info("grpc test server stopped")
 
 	return codes.Success
 }

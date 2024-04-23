@@ -1,4 +1,5 @@
-GO := go
+GO     := go
+DOCKER := docker
 
 # Directories
 ##################################################################
@@ -18,3 +19,20 @@ build:
 run-%:
 	$(eval NAME := $(subst run-,,$@))
 	@$(DIR_DIST)/$(NAME)
+
+# Protobuffers
+##################################################################
+
+.PHONY: gen-proto
+gen-proto:
+	$(eval DIR := $(shell pwd))
+	$(eval UID := $(shell id -u))
+	$(DOCKER) run --rm \
+		-u $(UID) \
+		-v $(DIR)/protobuf:/protobuf \
+		-w /protobuf \
+		rvolosatovs/protoc:v4.1.0 \
+		--proto_path=/protobuf/proto \
+		--go_out=/protobuf/go --go_opt=paths=source_relative \
+		--go-grpc_out=/protobuf/go --go-grpc_opt=paths=source_relative \
+		/protobuf/proto/testservice/v1/service.proto

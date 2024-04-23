@@ -1,4 +1,4 @@
-package cli
+package codes
 
 const (
 	Success = 0
