@@ -1,5 +1,7 @@
 package entities
 
+import "regexp"
+
 // MessageBrokerContext is the actual state of the message broker, holding all the configured
 // queues, topics etc.
 type MessageBrokerContext struct {
@@ -32,4 +34,30 @@ func (mbc *MessageBrokerContext) FindExchangeByName(name string) (*Exchange, boo
 	}
 
 	return nil, false
+}
+
+func (mbc *MessageBrokerContext) FindQueuesForTopic(name string) ([]*Exchange, error) {
+	topic, ok := mbc.FindExchangeByName(name)
+	if !ok {
+		return nil, nil
+	}
+
+	var queues []*Exchange
+
+	for _, exchange := range mbc.Exchanges {
+		if exchange.Kind != ExchangeKindQueue {
+			continue
+		}
+
+		matched, err := regexp.MatchString(topic.Pattern, exchange.Name)
+		if err != nil {
+			return nil, err
+		}
+
+		if matched {
+			queues = append(queues, exchange)
+		}
+	}
+
+	return queues, nil
 }

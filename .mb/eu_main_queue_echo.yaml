@@ -1,0 +1,8 @@
+apiVersion: mb.io/v1alpha1
+kind: Queue
+metadata:
+  foo: bar
+  baz: boo
+
+spec:
+  name: eu.main.echo

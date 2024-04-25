@@ -13,9 +13,9 @@ import (
 	mbV1alpha1 "github.com/alexZaicev/message-broker/protobuf/go/messagebroker/v1alpha1"
 )
 
-func getMessageBytes(payload []byte) ([]byte, error) {
+func getMessageBytes(exchange string, payload []byte) ([]byte, error) {
 	envelope, marshalErr := proto.Marshal(&mbV1alpha1.Envelope{
-		Exchange: "echoQueue",
+		Exchange: exchange,
 		Payload:  payload,
 	})
 	if marshalErr != nil {
@@ -35,6 +35,12 @@ func getMessageBytes(payload []byte) ([]byte, error) {
 }
 
 func run() int {
+	args := os.Args[1:]
+	if len(args) != 1 {
+		slog.Error("should provide exactly one exchange name")
+		return codes.Failure
+	}
+
 	tcpAddr, err := net.ResolveTCPAddr("tcp", ":6800")
 	if err != nil {
 		slog.Error("failed to resolve tcp address", logging.WithError(err))
@@ -50,7 +56,7 @@ func run() int {
 
 	// send message every 3 seconds
 	for {
-		msg, marshalErr := getMessageBytes([]byte("hello world"))
+		msg, marshalErr := getMessageBytes(args[0], []byte("hello world"))
 		if marshalErr != nil {
 			slog.Error("failed to encode message", logging.WithError(marshalErr))
 			return codes.Failure

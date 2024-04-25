@@ -5,4 +5,4 @@ metadata:
   baz: boo
 
 spec:
-  name: echoQueue
+  name: eu.test.echo

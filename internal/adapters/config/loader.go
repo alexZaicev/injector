@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -38,6 +39,11 @@ func LoadConfiguration(mbCtx *entities.MessageBrokerContext) error {
 			var topicSpec TopicSpec
 			if decodeErr := mapstructure.Decode(resource.Spec, &topicSpec); decodeErr != nil {
 				return fmt.Errorf("failed to decode topic spec: %w", decodeErr)
+			}
+
+			// validate pattern
+			if _, compileErr := regexp.Compile(topicSpec.Pattern); compileErr != nil {
+				return fmt.Errorf("failed to compile topic pattern: %w", compileErr)
 			}
 
 			mbCtx.AddExchange(entities.NewTopicExchange(uuid.New(), topicSpec.Name, topicSpec.Pattern))

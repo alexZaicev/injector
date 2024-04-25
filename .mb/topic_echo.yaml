@@ -1,0 +1,9 @@
+apiVersion: mb.io/v1alpha1
+kind: Topic
+metadata:
+  foo: bar
+  baz: boo
+
+spec:
+  name: echoTopic
+  pattern: eu.*.echo

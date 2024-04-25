@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
+	"sync"
 	"sync/atomic"
 
 	"google.golang.org/protobuf/proto"
@@ -58,7 +59,7 @@ func (b *MessageBroker) publishMessage(conn net.Conn, errCount *atomic.Int32, re
 	case entities.ExchangeKindQueue:
 		b.publishMessageOverQueue(conn, exchange, &envelope)
 	case entities.ExchangeKindTopic:
-		sendNackResponse(conn, MetadataKeyError, "Topic exchange not supported")
+		b.publishMessageOverTopic(conn, exchange, &envelope)
 	default:
 		slog.Error("unknown exchange type", slog.Int("type", int(exchange.Kind)))
 		sendErrorResponse(conn, errCount, "Failed to route message to exchange")
@@ -73,10 +74,43 @@ func (b *MessageBroker) publishMessageOverQueue(
 	channel, ok := b.channels.Get(exchange.ID)
 	if !ok {
 		// TODO: maybe message should go into buffer?
-		sendNackResponse(conn, MetadataKeyError, "Chanel does not exist")
+		sendNackResponse(conn, MetadataKeyError, "Channel does not exist")
 		return
 	}
 
 	sendAckResponse(conn)
 	channel.Send(envelope)
+}
+
+func (b *MessageBroker) publishMessageOverTopic(
+	conn net.Conn,
+	exchange *entities.Exchange,
+	envelope *mbV1alpha1.Envelope,
+) {
+	queues, err := b.mbCtx.FindQueuesForTopic(exchange.Name)
+	if err != nil {
+		sendNackResponse(conn, MetadataKeyError, "Topic does not exist")
+	}
+
+	sendAckResponse(conn)
+
+	var wg sync.WaitGroup
+
+	for _, queue := range queues {
+		wg.Add(1)
+
+		go func(queue *entities.Exchange) {
+			defer wg.Done()
+			channel, ok := b.channels.Get(queue.ID)
+			if !ok {
+				// TODO: maybe message should go into buffer?
+				slog.Error("failed to find channel for queue", slog.String(logging.Queue, queue.Name))
+				return
+			}
+
+			channel.Send(envelope)
+		}(queue)
+	}
+
+	wg.Wait()
 }

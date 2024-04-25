@@ -66,6 +66,12 @@ func getSubscriptionRequest(queue string) ([]byte, error) {
 }
 
 func run() int {
+	args := os.Args[1:]
+	if len(args) != 1 {
+		slog.Error("should provide exactly one exchange name")
+		return codes.Failure
+	}
+
 	tcpAddr, err := net.ResolveTCPAddr("tcp", ":6800")
 	if err != nil {
 		slog.Error("failed to resolve tcp address", logging.WithError(err))
@@ -79,7 +85,7 @@ func run() int {
 	}
 	defer conn.Close()
 
-	if err = subscribe(conn, "echoQueue"); err != nil {
+	if err = subscribe(conn, args[0]); err != nil {
 		slog.Error("failed to subscribe to queue", logging.WithError(err))
 		return codes.Failure
 	}
