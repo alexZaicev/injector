@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option go_package = "messagebroker/v1alpha1;messagebroker_v1alpha1";
+
+package messagebroker.v1alpha1;
+
+enum EnumStatus {
+  ENUM_STATUS_UNSPECIFIED = 0;
+  ENUM_STATUS_ACK = 1;
+  ENUM_STATUS_NACK = 2;
+  ENUM_STATUS_ERR = 3;
+  ENUM_STATUS_DISCONNECT = 4;
+}
+
+message Response {
+  EnumStatus status = 1;
+  map<string, string> metadata = 2;
+}

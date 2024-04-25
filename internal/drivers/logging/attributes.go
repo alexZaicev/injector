@@ -4,12 +4,7 @@ import "log/slog"
 
 const (
 	Error = "error"
-
-	Path        = "path"
-	Method      = "method"
-	Protocol    = "protocol"
-	Source      = "source"
-	Destination = "destination"
+	Queue = "queue"
 )
 
 func WithError(err error) slog.Attr {

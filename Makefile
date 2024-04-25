@@ -3,15 +3,26 @@ DOCKER := docker
 
 # Directories
 ##################################################################
-DIR_DIST := ./dist
-DIR_CMD  := ./cmd
+DIR_DIST     := ./dist
+DIR_CMD      := ./cmd
+DIR_INTERNAL := ./internal
 
 # Build targets
 ##################################################################
-
 .PHONY: build
 build:
 	@$(GO) build -o $(DIR_DIST)/ $(DIR_CMD)/...
+
+.PHONY: fmt
+fmt:
+	gofmt -s -w -e $(DIR_CMD) $(DIR_INTERNAL)
+	gci write \
+		-s Standard \
+		-s Default \
+		-s 'Prefix(github.com)' \
+		-s 'Prefix(github.com/alexZaicev/message-broker)' \
+		$(DIR_CMD) $(DIR_INTERNAL)
+	goimports -local github.com/alexZaicev -w $(DIR_CMD) $(DIR_INTERNAL)
 
 # Run Targets
 ##################################################################
@@ -35,4 +46,4 @@ gen-proto:
 		--proto_path=/protobuf/proto \
 		--go_out=/protobuf/go --go_opt=paths=source_relative \
 		--go-grpc_out=/protobuf/go --go-grpc_opt=paths=source_relative \
-		/protobuf/proto/testservice/v1/service.proto
+		/protobuf/proto/messagebroker/v1alpha1/*.proto

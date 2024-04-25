@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+option go_package = "messagebroker/v1alpha1;messagebroker_v1alpha1";
+
+package messagebroker.v1alpha1;
+
+message SubscribeRequest {
+  string queue = 1;
+}

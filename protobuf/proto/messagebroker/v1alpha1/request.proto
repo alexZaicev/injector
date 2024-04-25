@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option go_package = "messagebroker/v1alpha1;messagebroker_v1alpha1";
+
+package messagebroker.v1alpha1;
+
+enum EnumRequestType {
+  ENUM_REQUEST_TYPE_UNSPECIFIED = 0;
+  ENUM_REQUEST_TYPE_SUBSCRIBE = 1;
+  ENUM_REQUEST_TYPE_MESSAGE = 2;
+}
+
+message Request {
+  EnumRequestType type = 1;
+  bytes body = 2;
+  map<string, string> metadata = 3;
+}
